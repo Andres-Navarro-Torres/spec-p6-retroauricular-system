@@ -1,58 +1,42 @@
-# SPEC-P6: Wearable Retroauricular PPG Monitoring System
+# SPEC-P6: Open-Source Wearable Retroauricular PPG System
 
-![SPEC-P6 System](docs/photo_devices.jpg) 
-*(Note: Replace this image with a high-quality photo of your assembled devices)*
+![SPEC-P6 System](docs/photo_devices.jpg)
 
 ## Overview
-The **SPEC-P6** is a custom-engineered, multi-device wearable system designed for continuous retroauricular photoplethysmography (PPG) acquisition under movement dynamics. 
+The **SPEC-P6** is an open-source, multi-device wearable system engineered for the continuous acquisition of retroauricular photoplethysmography (PPG) signals under movement dynamics. 
 
-This repository contains the complete "full-stack" bioengineering development, integrating parametric 3D-printed hardware, microcontroller firmware (Master/Slave architecture), and a Python-based Graphical User Interface (GUI) for real-time visualization and data logging.
+This repository serves as the official companion for our hardware submission, providing all necessary mechanical CAD files, electronics schematics, firmware, and software to fully replicate the system.
 
-This project is part of the research framework submitted to the **EMBC IEEE 2026 (Toronto)**.
+* **Target Discipline:** Biomedical Engineering, Human-Computer Interaction
+* **Hardware Type:** Wearable Biosensor System
+* **Cost to Build:** ~$ [XX.XX] USD *(Replace with total from BOM)*
 
-## System Architecture
-The system operates on a distributed architecture to ensure low latency and high signal fidelity during physical movement:
-1. **Slave Devices (Sensor Nodes):** Acquire raw PPG signals from the retroauricular region and transmit them reliably to the central hub.
-2. **Master Device (Central Hub):** Synchronizes and gathers data from the slave nodes, handling preprocessing and serial communication to the PC.
-3. **Python GUI (Desktop Station):** Receives the real-time serial stream, processes the data, displays live waveforms, and logs the session for offline analysis.
+## Repository Contents
+To comply with Open Source Hardware standards, this repository is organized to facilitate full replication:
 
-## Repository Structure
-* `/firmware`: Arduino `.ino` source code for both the Master hub and Slave sensor nodes.
-* `/software`: Python source code for the real-time GUI (Built with [Tkinter / PyQt / CustomTkinter]).
-* `/hardware`: Autodesk Fusion 360 source files and `.stl` meshes optimized for Bambu Lab 3D printers.
-* `/docs`: System block diagrams and hardware photographs.
+* `BOM.csv`: Complete Bill of Materials including component costs, sourcing links, and quantities.
+* `/hardware`: Contains all parametric 3D models (Autodesk Fusion 360 `.step` and `.f3d`), `.stl` meshes ready for FDM printing, and electronics wiring diagrams.
+* `/build_instructions`: A step-by-step visual `assembly_guide.md` detailing the soldering, hardware integration, and enclosure assembly.
+* `/firmware`: Microcontroller code for the distributed Master/Slave architecture (Arduino IDE).
+* `/software`: Python-based Graphical User Interface for real-time visualization and data logging.
 
-## Hardware & Manufacturing
-The enclosures were parametrically designed to be lightweight, ergonomic, and resistant to mechanical artifacts during movement.
-* **CAD Software:** Autodesk Fusion 360
-* **3D Printer:** Bambu Lab [Your Printer Model, e.g., P1P or X1 Carbon]
-* **Material:** [PLA / PETG / TPU]
-* **Slicer Settings:** [e.g., 15% Gyroid infill, no supports needed]
+## Replication & Assembly
+To build your own SPEC-P6 system, please refer to the following documents in order:
+1. Purchase components listed in the [BOM.csv](BOM.csv).
+2. Print the enclosures and assemble the electronics following the [Assembly Guide](build_instructions/assembly_guide.md).
+3. Flash the [Firmware](firmware/) to the sensor nodes and central hub.
+4. Install and run the [Python GUI](software/) to begin data acquisition.
 
-## Firmware Setup (Microcontrollers)
-The microcontrollers were programmed using the Arduino IDE. 
-1. Open `firmware/slave_device/slave_device.ino` and upload to the sensor nodes.
-2. Open `firmware/master_device/master_device.ino` and upload to the central hub.
-*Dependencies:* [List any specific Arduino libraries you used, e.g., Wire.h, specific PPG sensor libraries].
+## Open Source Licenses
+This project is certified Open Source Hardware and utilizes the following licenses:
+* **Hardware (Mechanical & Electronics):** CERN Open Hardware Licence v1.2 (CERN-OHL-W)
+* **Software & Firmware:** MIT License
+* **Documentation:** Creative Commons Attribution 4.0 International (CC BY 4.0)
 
-## Software Installation (Python GUI)
-The desktop application requires Python 3.8+. To install the required dependencies and run the interface:
+## Contact & Citation
+If you build upon this hardware design, please cite our corresponding *HardwareX* manuscript:
+> Navarro, A., et al. (2026). "[Your Exact Paper Title]". *HardwareX* (Submitted/Under Review).
 
-```bash
-# 1. Install requirements
-pip install -r requirements.txt
-
-# 2. Run the application
-python software/main.py
-```
-Academic Citation
-If you utilize this hardware/software architecture or find it helpful, please cite our upcoming manuscript:
-
-Navarro, A., et al. (2026). "[Your Exact Paper Title]". 48th Annual International Conference of the IEEE Engineering in Medicine and Biology Society (EMBC), Toronto, Canada.
-
-Contact & Author
-Andrés Navarro
-
-M.Sc. Candidate in Bioengineering and Intelligent Computing
-
+**Andrés Navarro**  
+M.Sc. Candidate in Bioengineering and Intelligent Computing  
 [Your LinkedIn URL]

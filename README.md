@@ -44,3 +44,15 @@ pip install -r requirements.txt
 
 # 2. Run the application
 python software/main.py
+
+Academic Citation
+If you utilize this hardware/software architecture or find it helpful, please cite our upcoming manuscript:
+
+Navarro, A., et al. (2026). "[Your Exact Paper Title]". 48th Annual International Conference of the IEEE Engineering in Medicine and Biology Society (EMBC), Toronto, Canada.
+
+Contact & Author
+Andrés Navarro
+
+M.Sc. Candidate in Bioengineering and Intelligent Computing
+
+[Your LinkedIn URL]

@@ -1,13 +1,13 @@
 /**
- * Esclavo Lector (XIAO ESP32-C6) - Optimización de Energía Máxima
- * - Fs: 50 Hz efectivos (100 Hz Base / 2 HW Averaging)
- * - CPU: 80 MHz
- * - Bluetooth: APAGADO
- * - PPG: sondeo de FIFO cada PPG_POLL_INTERVAL_MS (antes 1 ms) con
- *        lectura en ráfaga e interpolación de timestamps (no afecta
- *        la calidad de los datos, reduce despertares de CPU/I2C).
- * - Batería: lectura de A0 (GPIO0) cada BATTERY_UPDATE_INTERVAL_MS,
- *        cacheada y enviada en cada paquete.
+ * @file slave_node.ino
+ * @author Andrés Navarro
+ * @brief Slave Node Firmware - SPEC-P6 System
+ * @details Firmware for the ESP32-C6 slave node. Responsible for sampling 
+ *          retroauricular photoplethysmography (MAX30102) and inertial 
+ *          data (MPU6050) under movement dynamics, utilizing FreeRTOS 
+ *          tasks and ESP-NOW communication.
+ * @institution Universidad de Guadalajara (UdeG) - CUCEI
+ * @date 2026
  */
 
 #include <esp_now.h>
@@ -19,7 +19,6 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 
-// ===== REGISTROS =====
 #define MAX30102_ADDRESS        0x57
 #define MAX_REG_MODE_CONFIG     0x09
 #define MAX_REG_SPO2_CONFIG     0x0A
@@ -60,7 +59,7 @@ SemaphoreHandle_t mpuMutex;
 volatile bool systemRunning = false;
 volatile bool sensorsActive = false;
 volatile int64_t timeOffset_us = 0;
-volatile uint16_t batteryVoltage_mv = 0; // Cacheado, se refresca cada BATTERY_UPDATE_INTERVAL_MS
+volatile uint16_t batteryVoltage_mv = 0;
 
 volatile uint8_t ledBrightness = 0x24; 
 const long FINGER_DETECT_THRESH         = 20000;
@@ -76,12 +75,14 @@ bool writeRegister8(uint8_t address, uint8_t reg, uint8_t val) {
   Wire.beginTransmission(address); Wire.write(reg); Wire.write(val);
   return (Wire.endTransmission() == 0);
 }
+
 uint8_t readRegister8(uint8_t address, uint8_t reg, bool* success) {
   Wire.beginTransmission(address); Wire.write(reg);
   if (Wire.endTransmission(false) != 0) { *success = false; return 0; }
   if (Wire.requestFrom(address, (uint8_t)1) != 1) { *success = false; return 0; }
   *success = true; return Wire.read();
 }
+
 bool readBurst(uint8_t address, uint8_t reg, uint8_t* buffer, uint8_t count) {
   Wire.beginTransmission(address); Wire.write(reg);
   if (Wire.endTransmission(false) != 0) return false;
@@ -120,22 +121,10 @@ void mpuTask(void * pv) {
         }
       }
     }
-    vTaskDelay(pdMS_TO_TICKS(20)); // Polling a ~50Hz
+    vTaskDelay(pdMS_TO_TICKS(20));
   }
 }
 
-// ppgTask: antes sondeaba la FIFO cada 1 ms leyendo 1 muestra a la vez.
-// Ahora sondea cada PPG_POLL_INTERVAL_MS (15 ms por defecto) y lee TODAS
-// las muestras disponibles en una sola ráfaga I2C. La FIFO del MAX30102
-// tiene 32 posiciones (~640 ms de margen a 50 Hz), así que no hay riesgo
-// de overflow/pérdida con este intervalo (margen de seguridad ~40x).
-//
-// Como pueden llegar varias muestras en una sola lectura, el timestamp de
-// cada una se interpola repartiendo uniformemente el tiempo transcurrido
-// desde la lectura anterior entre el número de muestras nuevas. Esto
-// reconstruye la cadencia real de muestreo y de hecho reduce el jitter de
-// cuantización que introducía el polling de 1 ms (el scheduler de FreeRTOS
-// nunca es perfectamente periódico a esa escala).
 void ppgTask(void * pv) {
   int64_t lastFifoReadTime = 0;
   bool haveReference = false;
@@ -149,7 +138,7 @@ void ppgTask(void * pv) {
         int num = (int)wr - (int)rd; if (num < 0) num += 32;
 
         if (num > 0) {
-          uint8_t b[6 * 32]; // La FIFO completa (32 muestras) cabe en el buffer
+          uint8_t b[6 * 32];
           if (readBurst(MAX30102_ADDRESS, MAX_REG_FIFO_DATA, b, num * 6)) {
             int64_t now = esp_timer_get_time() - timeOffset_us;
             int64_t spacing = haveReference ? (now - lastFifoReadTime) / num : 0;
@@ -168,16 +157,12 @@ void ppgTask(void * pv) {
         xSemaphoreGive(i2cMutex);
       }
     } else {
-      haveReference = false; // Reinicia la referencia temporal al reactivar sensores
+      haveReference = false;
     }
     vTaskDelay(pdMS_TO_TICKS(PPG_POLL_INTERVAL_MS));
   }
 }
 
-// batteryTask: lee el divisor resistivo en A0 (GPIO0) cada
-// BATTERY_UPDATE_INTERVAL_MS. Prioridad baja, no comparte el bus I2C,
-// así que no interfiere en absoluto con el muestreo de PPG/MPU.
-// El costo energético es despreciable: unas pocas lecturas de ADC cada 15 s.
 void batteryTask(void * pv) {
   pinMode(BATTERY_ADC_PIN, INPUT);
   for (;;) {
@@ -327,14 +312,13 @@ void setup() {
   digitalWrite(LED_BUILTIN, HIGH);
   Serial.begin(921600);
   
-  // --- OPTIMIZACIÓN EXTREMA DE ENERGÍA ---
   setCpuFrequencyMhz(80); 
-  btStop();               
+  btStop();                
 
   serialMutex = xSemaphoreCreateMutex();
   i2cMutex    = xSemaphoreCreateMutex();
   mpuMutex    = xSemaphoreCreateMutex();
-  ppgQueue    = xQueueCreate(32, sizeof(PpgData)); // Igualado a la capacidad de la FIFO (32) por margen de seguridad
+  ppgQueue    = xQueueCreate(32, sizeof(PpgData));
 
   Wire.begin();
   Wire.setClock(400000);
@@ -346,8 +330,6 @@ void setup() {
     writeRegister8(MAX30102_ADDRESS, MAX_REG_FIFO_WR_PTR, 0x00);
     writeRegister8(MAX30102_ADDRESS, MAX_REG_FIFO_RD_PTR, 0x00);
     
-    // 0x27 Configura el MAX30102 a 100 SPS Base. 
-    // Como el Hardware Averaging (0x3F) promedia 2 muestras, la salida final es exactamente 50 Hz.
     writeRegister8(MAX30102_ADDRESS, MAX_REG_SPO2_CONFIG, 0x27);
     writeRegister8(MAX30102_ADDRESS, MAX_REG_FIFO_CONFIG, 0x3F);
     writeRegister8(MAX30102_ADDRESS, MAX_REG_LED1_PA, ledBrightness);
@@ -360,7 +342,6 @@ void setup() {
     digitalWrite(LED_BUILTIN, LOW); delay(250); digitalWrite(LED_BUILTIN, HIGH); delay(250);
     writeRegister8(MPU6050_ADDRESS, MPU_REG_PWR_MGMT_1, 0x00); delay(100);
     writeRegister8(MPU6050_ADDRESS, MPU_REG_CONFIG, 0x03);
-    // 0x13 (Divisor 19) Configura el MPU6050 a 50 Hz físicos
     writeRegister8(MPU6050_ADDRESS, MPU_REG_SMPLRT_DIV, 0x13);
     writeRegister8(MPU6050_ADDRESS, MPU_REG_GYRO_CONFIG, 0x00);
     writeRegister8(MPU6050_ADDRESS, MPU_REG_ACCEL_CONFIG, 0x00);

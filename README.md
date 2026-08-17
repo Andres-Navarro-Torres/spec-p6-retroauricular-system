@@ -44,7 +44,7 @@ pip install -r requirements.txt
 
 # 2. Run the application
 python software/main.py
-
+```
 Academic Citation
 If you utilize this hardware/software architecture or find it helpful, please cite our upcoming manuscript:
 

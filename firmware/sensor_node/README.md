@@ -9,8 +9,9 @@ Each Sensor Node integrates:
 - XIAO ESP32-C6 microcontroller
 - MAX30102 photoplethysmography sensor
 - MPU6050 inertial measurement unit (IMU)
-- Custom-designed PCB
+- Custom-designed PCB (2-layer, 1.6 mm thickness)
 - 3.7 V, 100 mAh LiPo battery
+- Power slide switch and user tactile push-button
 
 The same Sensor Node hardware is used for the three anatomical measurement sites: retroauricular region, wrist, and index finger.
 
@@ -18,51 +19,55 @@ The same Sensor Node hardware is used for the three anatomical measurement sites
 
 The Sensor Node:
 
-1. Acquires PPG data from the MAX30102.
-2. Acquires inertial data from the MPU6050.
-3. Generates device timestamps.
-4. Packages multiple samples into ESP-NOW data packets.
-5. Transmits data wirelessly to the Coordinator.
-6. Receives control commands from the Coordinator.
-7. Reports battery voltage.
+1. Acquires PPG data from the MAX30102 sensor via I2C.
+2. Acquires inertial data (accelerometer and gyroscope) from the MPU6050 via I2C.
+3. Generates high-resolution device timestamps using FreeRTOS timer ticks.
+4. Packages five samples into structured ESP-NOW data packets to optimize wireless bandwidth.
+5. Transmits data wirelessly to the Coordinator using ESP-NOW in a star network topology.
+6. Receives control commands from the Coordinator (Start, Stop, and Calibration routines).
+7. Monitors and reports battery voltage through an integrated ADC voltage divider.
 
-## Firmware
+## Firmware & FreeRTOS Architecture
 
-The firmware uses FreeRTOS-based concurrent tasks for sensor acquisition and system management.
+The firmware is built on FreeRTOS for concurrent multitasking and real-time management:
+
+- Dedicated task handling inertial data acquisition.
+- Dedicated task handling PPG FIFO reading and polling.
+- Dedicated task monitoring battery voltage status.
+- Hardware abstraction and shared protocol definitions managed through common_definitions.h.
 
 ## Sampling
 
-The target acquisition rate is 50 Hz for PPG and inertial data.
+The target acquisition rate is 50 Hz for PPG and inertial measurements.
 
 Five samples are grouped into each data packet before wireless transmission.
 
 ## Communication
 
-Communication with the Coordinator is performed using ESP-NOW.
+Communication with the Coordinator is performed using ESP-NOW over Wi-Fi STA mode (channel configured via common definitions).
 
-The Sensor Node transmits measurement data to the Coordinator and receives control commands from it.
+The Sensor Node transmits structured data packets to the Coordinator and listens for incoming control packets.
 
 ## Hardware documentation
 
 The complete hardware design, including PCB files, schematic, Gerber files, and bill of materials, is available in:
 
-`/hardware/sensor_node/`
+/hardware/sensor_node/
 
 ## Configuration
 
-Network configuration parameters are currently defined in the shared firmware definitions.
+Network configuration parameters, device MAC addresses, and operational constants are defined in the shared firmware definitions file:
 
-See:
-
-`/firmware/common/common_definitions.h`
+/firmware/common/common_definitions.h
 
 ## Reproduction
 
 To reproduce a Sensor Node:
 
-1. Manufacture the PCB.
-2. Assemble the listed components.
-3. Program the XIAO ESP32-C6 with the Sensor Node firmware.
-4. Configure the ESP-NOW network parameters.
-5. Verify communication with the Coordinator.
-6. Verify PPG and IMU acquisition before deployment.
+1. Manufacture the custom FR4 PCB using the provided Gerber files.
+2. Solder the surface-mount components (bottom layer SMT assembly) and assemble the XIAO ESP32-C6 microcontroller and auxiliary switches (top layer).
+3. Connect the 3.7V 100 mAh LiPo battery and power switch.
+4. Program the XIAO ESP32-C6 with the Sensor Node firmware (sensor_node.ino).
+5. Configure the ESP-NOW network parameters and MAC addresses in common_definitions.h.
+6. Verify wireless communication and calibration with the Coordinator.
+7. Verify PPG and IMU acquisition before final mechanical casing integration.

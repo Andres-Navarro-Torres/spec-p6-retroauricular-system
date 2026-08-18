@@ -1,70 +1,111 @@
-# SPEC-P6 Coordinator
+# SPEC-P6 Acquisition Software
 
-## Description
+## Overview
 
-The SPEC-P6 Coordinator is the ESP32-based communication and acquisition gateway responsible for coordinating multiple Sensor Nodes.
+The SPEC-P6 Acquisition Software is a Python-based graphical interface developed for real-time monitoring, control, synchronization, and data acquisition from the SPEC-P6 wearable sensor network.
 
-The Coordinator is a functional role rather than a dedicated SPEC-P6 PCB. It can be implemented using a compatible ESP32 device with ESP-NOW support.
+The software communicates with the SPEC-P6 Coordinator through a serial interface.
 
 ## Main functions
 
-The Coordinator:
+The application provides:
 
-1. Communicates with multiple SPEC-P6 Sensor Nodes using ESP-NOW.
-2. Sends control commands to the Sensor Nodes.
-3. Receives measurement packets from the Sensor Nodes.
-4. Forwards acquired data to the host computer through a serial interface.
-5. Provides the interface between the wireless sensor network and the acquisition software.
-6. Generates the synchronization trigger used for integration with the BIOPAC system.
+- Real-time visualization of PPG signals.
+- Real-time visualization of inertial measurements.
+- Monitoring of connected Sensor Nodes.
+- Acquisition control.
+- Sensor calibration control.
+- Sampling-frequency estimation.
+- Heart-rate estimation.
+- Data recording.
+- CSV data export.
+- BIOPAC synchronization control.
 
-## Network architecture
+## System communication
 
-The system uses a star topology:
+The communication architecture is:
 
-Coordinator
+PC → Serial → Coordinator → ESP-NOW → Sensor Nodes
 
-- Sensor Node 1
-- Sensor Node 2
-- Sensor Node 3
+The current implementation uses a serial communication rate of 921600 baud between the host computer and the Coordinator.
 
-Sensor Nodes transmit measurement data to the Coordinator.
+## Data acquisition
 
-The Coordinator can transmit control commands to the Sensor Nodes.
+The software receives data from the Coordinator and maintains independent data buffers for each Sensor Node.
 
-## Hardware
+The target acquisition frequency is 50 Hz.
 
-The Coordinator does not require a dedicated SPEC-P6 PCB.
+Each received measurement contains:
 
-Any compatible ESP32 platform capable of ESP-NOW communication may be used, provided that the required firmware interfaces and synchronization output are available.
+- Device timestamp.
+- PPG red channel.
+- PPG infrared channel.
+- Accelerometer data (X, Y, Z).
+- Gyroscope data (X, Y, Z).
+- Instantaneous sampling-frequency estimate.
+- Battery voltage.
 
-## Communication
+## Calibration and synchronization
 
-Wireless communication is performed using ESP-NOW.
+Before an acquisition, the software can initiate the Sensor Node calibration procedure through the Coordinator.
 
-The host computer communicates with the Coordinator through a serial connection.
+The acquisition sequence includes:
 
-## Serial interface
+1. Sensor Node calibration.
+2. Acquisition start command.
+3. Detection of active Sensor Nodes.
+4. Data reception and buffering.
+5. BIOPAC synchronization trigger.
+6. Data recording.
+7. Acquisition termination.
+8. CSV export.
 
-The current acquisition system uses a serial communication rate of 921600 baud.
+## Data output
 
-## Synchronization
+The software exports acquired data as CSV files.
 
-The Coordinator provides the hardware synchronization interface used to generate the BIOPAC trigger.
+The exported data include PPG, inertial, timing, sampling-frequency, and battery information for the detected Sensor Nodes.
 
-## Configuration
+## Requirements
 
-ESP-NOW network parameters and device addresses are currently defined in:
+The software requires Python and the packages listed in:
 
-`/firmware/common/common_definitions.h`
+`requirements.txt`
 
-## Reproduction
+The main dependencies include:
 
-To reproduce the Coordinator:
+- PyQt6
+- PyQtGraph
+- NumPy
+- SciPy
 
-1. Select a compatible ESP32 device with ESP-NOW support.
-2. Configure the network parameters.
-3. Upload the Coordinator firmware.
-4. Configure the Sensor Node addresses.
-5. Connect the Coordinator to the host computer.
-6. Verify wireless communication with the Sensor Nodes.
-7. Verify the synchronization output before experimental acquisition.
+## Installation
+
+Install the required Python packages with:
+
+```bash
+pip install -r requirements.txt
+```
+Execution
+
+Run the acquisition software with:
+python spec_p6_acquisition_suite.py
+
+Hardware requirements
+
+The software requires:
+
+A SPEC-P6 Coordinator running the Coordinator firmware.
+One or more SPEC-P6 Sensor Nodes.
+A USB/serial connection between the Coordinator and the host computer.
+Notes
+
+The acquisition software is intended to operate together with the SPEC-P6 firmware and communication protocol.
+
+See the following documentation:
+
+/firmware/sensor_node/
+/firmware/coordinator/
+/protocols/communication/
+/protocols/synchronization/
+

@@ -46,4 +46,7 @@ To deploy and operate the SPEC-P6 platform:
 
 ## License
 
-This project is licensed under the terms specified in the LICENSE file.
+To effectively cover both the software and physical hardware designs, this project employs a dual-licensing strategy:
+
+- **Software and Firmware:** Licensed under the [MIT License](LICENSE).
+- **Hardware and Mechanical Designs:** Licensed under the CERN Open Hardware Licence Version 2 - Permissive (CERN-OHL-P). You may redistribute and modify the hardware documentation and make products using it under the terms of the CERN-OHL-P v2 (https://ohwr.org/cernohl).

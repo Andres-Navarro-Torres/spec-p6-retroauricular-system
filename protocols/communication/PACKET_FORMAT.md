@@ -107,7 +107,7 @@ The value is expressed in millivolts.
 Data flow
 
 The measurement data follow this path:
-
+```cpp
 MAX30102 ─┐
           │
           ├── Sensor Node
@@ -124,7 +124,7 @@ MPU6050 ──┘
               ▼
         Host computer
 Control packet
-
+```
 Control commands from the Coordinator to the Sensor Nodes use a separate structure:
 ```cpp
 typedef struct __attribute__((packed)) struct_cmd_packet {

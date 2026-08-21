@@ -25,7 +25,7 @@ The repository is organized into the following directories:
 - `/hardware/`: Contains custom PCB Gerber files, EAGLE source files (`.sch`, `.brd`), and the detailed Bill of Materials (BOM) with manufacturer part numbers.
 - `/mechanical/`: Includes 3D printable `.STL` files and editable CAD source files for the wearable enclosures across all targeted anatomical sites.
 - `/firmware/`: Houses the C/C++ source code for the Sensor Nodes and the Coordinator, alongside shared MAC address definitions.
-- `/software/`: Contains the Python-based graphical acquisition suite (`spec_p6_acquisition_suite.py`), battery logging utilities, and `requirements.txt`. **This GUI explicitly includes the real-time implementation of the Anti-Laplacian spatial filter.**
+- `/software/`: Contains the Python-based graphical acquisition suite (`spec_p6_acquisition_suite.py`), battery logging utilities, and `requirements.txt`. The GUI utilizes PyQt6 and PyQtGraph for high-performance rendering, and SciPy for real-time digital filtering of the raw signals.
 - `/documentation/`: Contains printing guidelines (`PRINTING_SETTINGS.md`) and component assembly instructions.
 - `/figures/`: High-resolution images of the hardware, GUI screenshots, and in-vivo placement examples.
 - `/protocols/`: Markdown files describing acquisition, communication, and synchronization procedures.

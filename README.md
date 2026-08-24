@@ -2,7 +2,7 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22048827.svg)](https://doi.org/10.5281/zenodo.22048827)
 
-![SPEC-P6 System Overview](figures/system_overview.jpg) 
+![SPEC-P6 System Overview](figures/system_overview.png) 
 *(Note: Replace `system_overview.jpg` with an actual photo of your assembled board and enclosures in the `/figures` folder)*
 
 ## Overview
